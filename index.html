@@ -28,21 +28,43 @@
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
   label { display: block; font-size: 0.82rem; color: #a0aec0; margin-bottom: 6px; font-weight: 500; }
-  select, input {
+  select, input[type="number"] {
     width: 100%; padding: 12px 14px;
     background: rgba(0,0,0,0.3);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 10px; color: #e8ecf1; font-size: 1rem;
     outline: none; transition: border-color 0.2s;
   }
-  select:focus, input:focus { border-color: #0066b1; }
+  select:focus, input[type="number"]:focus { border-color: #0066b1; }
   select option { background: #1a1f3a; }
+
+  /* Checkbox custom */
+  .checkbox-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: rgba(0,102,177,0.08);
+    border: 1px solid rgba(0,102,177,0.25);
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: background 0.2s;
+  }
+  .checkbox-row:hover { background: rgba(0,102,177,0.15); }
+  .checkbox-row input[type="checkbox"] {
+    width: 20px; height: 20px; cursor: pointer;
+    accent-color: #4a9fd8;
+    margin: 0;
+  }
+  .checkbox-text { display: flex; flex-direction: column; gap: 2px; }
+  .checkbox-title { font-size: 0.95rem; font-weight: 600; color: #e8ecf1; }
+  .checkbox-hint { font-size: 0.78rem; color: #8892a6; }
+
   button {
     width: 100%; padding: 16px;
     background: linear-gradient(135deg, #0066b1, #4a9fd8);
     border: none; border-radius: 12px; color: white;
     font-size: 1.05rem; font-weight: 600; cursor: pointer;
-    margin-top: 12px; transition: transform 0.15s, box-shadow 0.15s;
+    margin-top: 16px; transition: transform 0.15s, box-shadow 0.15s;
   }
   button:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,102,177,0.4); }
   button:active { transform: translateY(0); }
@@ -51,9 +73,7 @@
     text-align: center; padding: 26px 24px; border-radius: 16px;
     margin-bottom: 14px; border: 2px solid;
   }
-  .verdict-box.secondary {
-    padding: 20px 24px; margin-top: 14px;
-  }
+  .verdict-box.secondary { padding: 20px 24px; margin-top: 14px; }
   .verdict-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.75; margin-bottom: 8px; }
   .verdict { font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; }
   .verdict-box.secondary .verdict { font-size: 1.4rem; }
@@ -82,10 +102,17 @@
     color: #f0ad4e; padding: 12px; border-radius: 8px;
     font-size: 0.82rem; margin-top: 12px; line-height: 1.5;
   }
+  .info-box {
+    background: rgba(0,102,177,0.12);
+    border: 1px solid rgba(0,102,177,0.4);
+    color: #7ab8e0; padding: 12px; border-radius: 8px;
+    font-size: 0.82rem; margin-top: 12px; line-height: 1.5;
+  }
   .section-title {
     font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px;
     color: #8892a6; margin: 20px 0 10px 0;
   }
+  .section-title:first-child { margin-top: 0; }
   footer { text-align: center; color: #5a6478; font-size: 0.78rem; margin-top: 28px; line-height: 1.6; }
 </style>
 </head>
@@ -136,7 +163,7 @@
       </div>
     </div>
 
-    <div class="section-title">Precio que te piden</div>
+    <div class="section-title">Precio y origen</div>
     <div class="grid">
       <div style="grid-column: 1 / -1;">
         <label>Precio pedido por el vendedor (€)</label>
@@ -144,20 +171,28 @@
       </div>
     </div>
 
+    <label class="checkbox-row">
+      <input type="checkbox" id="esEspana" checked>
+      <div class="checkbox-text">
+        <span class="checkbox-title">El coche es de España</span>
+        <span class="checkbox-hint">Ajusta +12% los precios de referencia (mercado español vs alemán)</span>
+      </div>
+    </label>
+
     <button onclick="analizar()">🔍 Analizar oferta</button>
   </div>
 
   <div id="result"></div>
 
   <footer>
-    Precios basados en mercado alemán (mobile.de, AutoScout24) · Oct 2026<br>
-    No incluye costes de importación a España (ITV, matriculación, transporte)
+    Precios base: mercado alemán (mobile.de, AutoScout24) · Oct 2026<br>
+    Ajuste España +12% · No incluye ITV, matriculación ni transporte si importas
   </footer>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// BASE DE DATOS: precios de mercado Oct 2026 (Alemania)
+// BASE DE DATOS: precios de mercado ALEMÁN Oct 2026
 // Formato: { anio: [precio@60.000km, precio@100.000km] }
 // ═══════════════════════════════════════════════════════════
 const DB = {
@@ -191,6 +226,9 @@ const PERFIL = {
   "430i": { motor: 'B48', cv: 245, costeOp: 'Medio',  presionSucesor: 'Media (i4 NA2)' },
   "440i": { motor: 'B58', cv: 374, costeOp: 'Alto',   presionSucesor: 'Media (i4 NA2)' }
 };
+
+// Factor de ajuste España vs Alemania
+const FACTOR_ESPANA = 1.12;
 
 // ═══════════════════════════════════════════════════════════
 // FUNCIONES
@@ -267,9 +305,6 @@ function formatPrice(n) {
   }).format(n);
 }
 
-// ═══════════════════════════════════════════════════════════
-// PUNTUACIÓN DE OPORTUNIDAD DE LA CONFIGURACIÓN (0-100)
-// ═══════════════════════════════════════════════════════════
 function scoreConfig(serie, modelo, anio, km, acabado, fecha) {
   const perfil = PERFIL[modelo];
   let score = 50;
@@ -322,11 +357,14 @@ function analizar() {
   const acabado = document.getElementById('acabado').value;
   const fecha = document.getElementById('fecha').value;
   const precioPedido = parseInt(document.getElementById('precio').value);
+  const esEspana = document.getElementById('esEspana').checked;
 
   if (isNaN(km) || km < 0) { alert('Introduce un kilometraje válido.'); return; }
   if (isNaN(precioPedido) || precioPedido <= 0) { alert('Introduce el precio que te piden.'); return; }
 
-  // 1. Precio de mercado calculado
+  // ──────────────────────────────────────────────────────────
+  // 1. CÁLCULO BASE (siempre en términos ALEMANES internamente)
+  // ──────────────────────────────────────────────────────────
   const [base60, base100] = getYearData(serie, modelo, anio);
   let precioAjustado = adjustForKm(base60, base100, km);
 
@@ -339,18 +377,36 @@ function analizar() {
     }
   }
 
-  // 2. Precio futuro (fecha objetivo)
   const depFactor = getDepFactor(anio, fecha);
-  const precioFuturo = precioAjustado * depFactor;
-  const precioHoy = precioAjustado;
+  const precioHoyDE = precioAjustado;              // Alemán, hoy
+  const precioFuturoDE = precioAjustado * depFactor; // Alemán, futuro
+  const minDE = precioFuturoDE * 0.92;
+  const maxDE = precioFuturoDE * 1.08;
 
-  // 3. Rango razonable
-  const min = precioFuturo * 0.92;
-  const max = precioFuturo * 1.08;
+  // ──────────────────────────────────────────────────────────
+  // 2. NORMALIZAR EL PRECIO DEL USUARIO A ALEMÁN
+  // Si es de España, el precio es +12% respecto a Alemania,
+  // por lo que lo dividimos por 1.12 para compararlo.
+  // ──────────────────────────────────────────────────────────
+  const factorNormalizacion = esEspana ? (1 / FACTOR_ESPANA) : 1;
+  const precioPedidoDE = precioPedido * factorNormalizacion;
 
-  // 4. Comparación del precio pedido vs precio justo
-  const delta = (precioPedido - precioFuturo) / precioFuturo;
+  // ──────────────────────────────────────────────────────────
+  // 3. COMPARAR (en términos alemanes, que es lo coherente)
+  // ──────────────────────────────────────────────────────────
+  const delta = (precioPedidoDE - precioFuturoDE) / precioFuturoDE;
 
+  // ──────────────────────────────────────────────────────────
+  // 4. VALORES PARA MOSTRAR (en la moneda del país del coche)
+  // Si es España, multiplicamos los valores alemanes por 1.12
+  // ──────────────────────────────────────────────────────────
+  const factorMostrar = esEspana ? FACTOR_ESPANA : 1;
+  const precioHoyMostrar = precioHoyDE * factorMostrar;
+  const precioFuturoMostrar = precioFuturoDE * factorMostrar;
+  const minMostrar = minDE * factorMostrar;
+  const maxMostrar = maxDE * factorMostrar;
+
+  // Veredicto sobre el precio
   let vPrecio, colorP, emojiP, descP;
   if (delta <= -0.15) {
     vPrecio = 'GANGAZO'; colorP = '#00a651'; emojiP = '🔥';
@@ -369,7 +425,7 @@ function analizar() {
     descP = 'Precio muy por encima del mercado. No recomendado salvo equipamiento excepcional.';
   }
 
-  // 5. Puntuación de la configuración
+  // Puntuación de configuración
   const { score, razones } = scoreConfig(serie, modelo, anio, km, acabado, fecha);
 
   let vConfig, colorC, emojiC, descC;
@@ -392,11 +448,25 @@ function analizar() {
 
   const barColor = score >= 60 ? '#00a651' : score >= 45 ? '#f0ad4e' : '#c0392b';
 
-  // 6. Render
+  // Info sobre el ajuste aplicado
+  const infoAjuste = esEspana
+    ? `<div class="info-box">
+        🇪🇸 <strong>Coche español detectado.</strong> Los precios de referencia mostrados incluyen el ajuste +12% (mercado español vs alemán). Tu precio se ha normalizado a alemán (÷1,12) para compararlo con la base de datos.
+      </div>`
+    : `<div class="info-box">
+        🇩🇪 <strong>Coche alemán.</strong> Los precios de referencia son de mercado alemán sin ajuste.
+      </div>`;
+
+  const sufijoPais = esEspana ? 'ES' : 'DE';
+  const etiquetaPais = esEspana ? 'España' : 'Alemania';
+
+  // Render
   const result = document.getElementById('result');
   result.style.display = 'block';
   result.innerHTML = `
     <div class="card">
+      ${infoAjuste}
+
       <div class="section-title">1 · Veredicto sobre el PRECIO</div>
       <div class="verdict-box" style="border-color:${colorP}; background:${colorP}15;">
         <div class="verdict-label">${emojiP} Análisis del precio pedido</div>
@@ -410,59 +480,5 @@ function analizar() {
           <div class="stat-value">${formatPrice(precioPedido)}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">Precio justo (${fecha})</div>
-          <div class="stat-value" style="color:${colorP};">${formatPrice(precioFuturo)}</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Diferencia</div>
-          <div class="stat-value" style="color:${colorP};">${delta>0?'+':''}${(delta*100).toFixed(1)}%</div>
-        </div>
-      </div>
-
-      <div class="range">
-        <div class="range-item">
-          <div class="label">Mínimo razonable</div>
-          <div class="value">${formatPrice(min)}</div>
-        </div>
-        <div class="range-item">
-          <div class="label">Máximo razonable</div>
-          <div class="value">${formatPrice(max)}</div>
-        </div>
-      </div>
-
-      <div class="notes">
-        <strong>Precio de mercado hoy (Oct 2026):</strong> ${formatPrice(precioHoy)}<br>
-        <strong>Precio estimado en ${fecha}:</strong> ${formatPrice(precioFuturo)} · depreciación estimada ${((1-depFactor)*100).toFixed(0)}%
-      </div>
-
-      <div class="section-title">2 · Veredicto sobre la CONFIGURACIÓN</div>
-      <div class="verdict-box secondary" style="border-color:${colorC}; background:${colorC}15;">
-        <div class="verdict-label">${emojiC} Oportunidad estratégica</div>
-        <div class="verdict" style="color:${colorC};">${vConfig}</div>
-        <div class="verdict-desc">${descC}</div>
-        <div class="bar"><div class="bar-fill" style="width:${score}%; background:${barColor};"></div></div>
-        <div style="font-size:0.78rem; color:#8892a6; margin-top:8px;">Puntuación: ${score}/100</div>
-      </div>
-
-      <div class="notes">
-        <strong>Configuración:</strong> BMW ${modelo} (Serie ${serie}) · ${anio} · ${km.toLocaleString('es-ES')} km · ${acabado==='msportpro'?'M Sport Pro':'M Sport'}<br>
-        <strong>Motor:</strong> ${PERFIL[modelo].motor} · ${PERFIL[modelo].cv} cv · Coste operativo ${PERFIL[modelo].costeOp.toLowerCase()}<br>
-        <strong>Presión de sucesor:</strong> ${PERFIL[modelo].presionSucesor}
-      </div>
-
-      <div class="notes">
-        <strong>Razones de la puntuación:</strong><br>
-        ${razones.map(r => '· ' + r).join('<br>')}
-      </div>
-
-      ${warning ? `<div class="warning">⚠️ ${warning}</div>` : ''}
-    </div>
-  `;
-
-  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-updateModels();
-</script>
-</body>
-</html>
+          <div class="stat-label">Precio justo ${fecha} (${sufijoPais})</div>
+          <div class="stat-value" style="color
