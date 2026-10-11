@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BMW Precio Justo — Analizador de Ofertas</title>
+<title>BMW Oportunidad — Analizador</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -52,22 +52,33 @@
     margin-bottom: 18px; border: 2px solid;
   }
   .verdict-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.75; margin-bottom: 8px; }
-  .verdict { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
+  .verdict { font-size: 1.9rem; font-weight: 800; margin-bottom: 10px; }
   .verdict-desc { font-size: 0.92rem; opacity: 0.9; line-height: 1.5; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  @media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
   .stat { background: rgba(0,0,0,0.2); padding: 14px 10px; border-radius: 10px; text-align: center; }
   .stat-label { font-size: 0.7rem; color: #8892a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .stat-value { font-size: 1.05rem; font-weight: 700; }
+  .stat-value { font-size: 1.15rem; font-weight: 700; }
   .range { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; }
-  .range-item { flex: 1; text-align: center; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 10px; }
+  @media (max-width: 600px) { .range { flex-direction: column; } }
+  .range-item { flex: 1; text-align: center; background: rgba(0,0,0,0.15); padding: 14px; border-radius: 10px; }
   .range-item .label { font-size: 0.7rem; color: #8892a6; text-transform: uppercase; letter-spacing: 1px; }
-  .range-item .value { font-size: 1rem; font-weight: 600; margin-top: 4px; }
+  .range-item .value { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
   .notes {
-    font-size: 0.82rem; color: #8892a6; line-height: 1.7;
+    font-size: 0.85rem; color: #a0aec0; line-height: 1.7;
     margin-top: 16px; padding-top: 16px;
     border-top: 1px solid rgba(255,255,255,0.08);
   }
   .notes strong { color: #c0c8d6; }
+  .bar {
+    height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px;
+    margin-top: 10px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .score-row { display: flex; justify-content: space-between; margin-top: 18px; gap: 12px; }
+  .score-item { flex: 1; text-align: center; }
+  .score-item .s-label { font-size: 0.7rem; color: #8892a6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .score-item .s-value { font-size: 1rem; font-weight: 700; }
   .warning {
     background: rgba(240,173,78,0.12);
     border: 1px solid rgba(240,173,78,0.4);
@@ -80,8 +91,8 @@
 <body>
 <div class="container">
   <header>
-    <h1>BMW Precio Justo</h1>
-    <p class="subtitle">Analiza si una oferta está bien, mal o por encima de mercado</p>
+    <h1>BMW Oportunidad</h1>
+    <p class="subtitle">Analiza si una configuración es buena compra para la fecha objetivo</p>
   </header>
 
   <div class="card">
@@ -99,16 +110,7 @@
       </div>
       <div>
         <label>Año</label>
-        <select id="anio">
-          <option value="2022">2022</option>
-          <option value="2021">2021</option>
-          <option value="2020">2020</option>
-          <option value="2019">2019</option>
-          <option value="2018">2018</option>
-          <option value="2017">2017</option>
-          <option value="2016">2016</option>
-          <option value="2015">2015</option>
-        </select>
+        <select id="anio"></select>
       </div>
       <div>
         <label>Kilómetros</label>
@@ -122,19 +124,16 @@
         </select>
       </div>
       <div>
-        <label>Precio pedido (€)</label>
-        <input type="number" id="precio" placeholder="Ej: 42000" value="42000" min="0">
-      </div>
-      <div>
         <label>Fecha objetivo de compra</label>
         <select id="fecha">
           <option value="2026">Oct 2026 (hoy)</option>
           <option value="2027">Oct 2027</option>
-          <option value="2028">Oct 2028</option>
+          <option value="2028" selected>Oct 2028</option>
+          <option value="2029">Oct 2029</option>
         </select>
       </div>
     </div>
-    <button onclick="analizar()">🔍 Analizar oferta</button>
+    <button onclick="analizar()">🔍 Analizar oportunidad</button>
   </div>
 
   <div id="result"></div>
@@ -147,8 +146,8 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// BASE DE DATOS: precios de mercado Oct 2026
-// Formato: [precio@60.000 km, precio@100.000 km] en €
+// BASE DE DATOS: precios de mercado Oct 2026 (Alemania)
+// Formato: { anio: [precio@60.000km, precio@100.000km] }
 // ═══════════════════════════════════════════════════════════
 const DB = {
   "3": {
@@ -163,9 +162,28 @@ const DB = {
   }
 };
 
+// Años válidos por serie (para el desplegable)
+const AÑOS = {
+  "3": [2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015],
+  "4": [2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015]
+};
+
 const MODELOS = {
   "3": ["320i", "330i", "340i"],
   "4": ["420i", "430i", "440i"]
+};
+
+// ═══════════════════════════════════════════════════════════
+// PERFIL DE CADA MODELO (para puntuar oportunidad)
+// B48 = 4 cilindros (económico) · B58 = 6 cilindros (caro)
+// ═══════════════════════════════════════════════════════════
+const PERFIL = {
+  "320i": { motor: 'B48', cv: 184, costeOp: 'Bajo',   presionSucesor: 'Alta (G50)' },
+  "330i": { motor: 'B48', cv: 258, costeOp: 'Medio',  presionSucesor: 'Alta (G50)' },
+  "340i": { motor: 'B58', cv: 374, costeOp: 'Alto',   presionSucesor: 'Alta (G50)' },
+  "420i": { motor: 'B48', cv: 184, costeOp: 'Bajo',   presionSucesor: 'Media (i4 NA2)' },
+  "430i": { motor: 'B48', cv: 245, costeOp: 'Medio',  presionSucesor: 'Media (i4 NA2)' },
+  "440i": { motor: 'B58', cv: 374, costeOp: 'Alto',   presionSucesor: 'Media (i4 NA2)' }
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -174,17 +192,27 @@ const MODELOS = {
 
 function updateModels() {
   const serie = document.getElementById('serie').value;
-  const select = document.getElementById('modelo');
-  select.innerHTML = '';
+
+  // Modelos
+  const selectM = document.getElementById('modelo');
+  selectM.innerHTML = '';
   MODELOS[serie].forEach(m => {
     const opt = document.createElement('option');
-    opt.value = m;
-    opt.textContent = m;
-    select.appendChild(opt);
+    opt.value = m; opt.textContent = m;
+    selectM.appendChild(opt);
+  });
+
+  // Años
+  const selectA = document.getElementById('anio');
+  selectA.innerHTML = '';
+  AÑOS[serie].forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    selectA.appendChild(opt);
   });
 }
 
-// Interpola entre años de referencia
+// Interpola precios para años sin dato exacto
 function getYearData(serie, modelo, anio) {
   const data = DB[serie][modelo];
   const years = Object.keys(data).map(Number).sort((a,b) => a-b);
@@ -219,21 +247,76 @@ function adjustForKm(base60, base100, km) {
   }
 }
 
-// Factor de depreciación futura según año del coche y fecha objetivo
+// Depreciación anual según año del coche
+function getDepRate(anio) {
+  if (anio >= 2022) return 0.12;
+  if (anio >= 2018) return 0.09;
+  return 0.06;
+}
+
+// Factor de depreciación acumulada hasta la fecha objetivo
 function getDepFactor(anio, fecha) {
   const yearsAhead = parseInt(fecha) - 2026;
   if (yearsAhead <= 0) return 1;
-  let rate;
-  if (anio >= 2022) rate = 0.12;
-  else if (anio >= 2018) rate = 0.09;
-  else rate = 0.06;
-  return Math.pow(1 - rate, yearsAhead);
+  return Math.pow(1 - getDepRate(anio), yearsAhead);
 }
 
 function formatPrice(n) {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency', currency: 'EUR', maximumFractionDigits: 0
   }).format(n);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PUNTUACIÓN DE OPORTUNIDAD (0-100)
+// ═══════════════════════════════════════════════════════════
+function scoreOportunidad(serie, modelo, anio, km, acabado, fecha) {
+  const perfil = PERFIL[modelo];
+  let score = 50; // base
+  const razones = [];
+
+  // 1. Coste operativo
+  if (perfil.costeOp === 'Bajo')  { score += 12; razones.push('✅ Coste operativo bajo (B48)'); }
+  if (perfil.costeOp === 'Medio') { score += 5;  razones.push('⚖️ Coste operativo medio (B48)'); }
+  if (perfil.costeOp === 'Alto')  { score -= 10; razones.push('⚠️ Coste operativo alto (B58)'); }
+
+  // 2. Presión del sucesor
+  if (serie === '3') { score -= 8; razones.push('⚠️ Serie 3 G20: presión del nuevo G50'); }
+  if (serie === '4') { score += 5; razones.push('✅ Serie 4 G22: sin sucesor ICE confirmado'); }
+
+  // 3. Año del coche (modernidad relativa en la fecha objetivo)
+  const edadEnFecha = parseInt(fecha) - anio;
+  if (edadEnFecha <= 4)      { score += 15; razones.push('✅ Muy moderno en la fecha objetivo'); }
+  else if (edadEnFecha <= 6) { score += 8;  razones.push('✅ Moderno en la fecha objetivo'); }
+  else if (edadEnFecha <= 8) { score += 0;  razones.push('⚖️ Edad media en la fecha objetivo'); }
+  else if (edadEnFecha <= 10){ score -= 8;  razones.push('⚠️ Antiguo en la fecha objetivo'); }
+  else                       { score -= 15; razones.push('🚫 Muy antiguo en la fecha objetivo'); }
+
+  // 4. Kilómetros
+  if (km <= 40000)       { score += 10; razones.push('✅ Kilometraje bajo'); }
+  else if (km <= 70000)  { score += 5;  razones.push('✅ Kilometraje contenido'); }
+  else if (km <= 100000) { score += 0;  razones.push('⚖️ Kilometraje medio'); }
+  else if (km <= 130000) { score -= 8;  razones.push('⚠️ Kilometraje alto'); }
+  else                   { score -= 15; razones.push('🚫 Kilometraje muy alto'); }
+
+  // 5. Potencia / atractivo
+  if (perfil.cv >= 370)      { score += 8; razones.push('✅ Seis cilindros B58 (374cv)'); }
+  else if (perfil.cv >= 240) { score += 3; razones.push('⚖️ Cuatro cilindros deportivo (245-258cv)'); }
+  else                       { score -= 5; razones.push('⚠️ Motor de acceso (184cv)'); }
+
+  // 6. Acabado
+  if (acabado === 'msportpro' && anio >= 2022) { score += 5; razones.push('✅ M Sport Pro (equipamiento top)'); }
+  else if (acabado === 'msportpro' && anio < 2022) { score -= 2; razones.push('⚠️ M Sport Pro no existía antes de 2022'); }
+
+  // 7. Penalización por fecha lejana (más incertidumbre)
+  const yearsAhead = parseInt(fecha) - 2026;
+  if (yearsAhead >= 3) score -= 5;
+  if (yearsAhead >= 4) score -= 5;
+
+  // Clamp
+  score = Math.max(0, Math.min(100, score));
+
+  return { score, razones };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -246,15 +329,14 @@ function analizar() {
   const anio = parseInt(document.getElementById('anio').value);
   const km = parseInt(document.getElementById('km').value);
   const acabado = document.getElementById('acabado').value;
-  const precio = parseInt(document.getElementById('precio').value);
   const fecha = document.getElementById('fecha').value;
 
-  if (isNaN(km) || isNaN(precio) || km < 0 || precio < 0) {
-    alert('Por favor, rellena todos los campos correctamente.');
+  if (isNaN(km) || km < 0) {
+    alert('Introduce un kilometraje válido.');
     return;
   }
 
-  // 1. Base según año y modelo (interpolado)
+  // 1. Base según año y modelo
   const [base60, base100] = getYearData(serie, modelo, anio);
 
   // 2. Ajuste por kilómetros
@@ -264,65 +346,71 @@ function analizar() {
   let warning = '';
   if (acabado === 'msportpro') {
     if (anio < 2022) {
-      warning = 'El acabado M Sport Pro solo existe desde 2022. Para este año, se ha tratado como M Sport estándar.';
+      warning = 'El acabado M Sport Pro solo existe desde 2022. Para este año se ha tratado como M Sport estándar.';
     } else {
-      precioAjustado *= 1.06; // +6% por M Sport Pro
+      precioAjustado *= 1.06;
     }
   }
 
-  // 4. Depreciación hasta fecha objetivo
+  // 4. Precio futuro estimado
   const depFactor = getDepFactor(anio, fecha);
   const precioFuturo = precioAjustado * depFactor;
+  const precioHoy = precioAjustado;
 
   // 5. Rango razonable
   const min = precioFuturo * 0.92;
   const max = precioFuturo * 1.08;
 
-  // 6. Diferencia
-  const delta = (precio - precioFuturo) / precioFuturo;
+  // 6. Puntuación de oportunidad
+  const { score, razones } = scoreOportunidad(serie, modelo, anio, km, acabado, fecha);
 
-  // 7. Veredicto
+  // 7. Veredicto según score
   let verdict, color, emoji, desc;
-  if (delta <= -0.15) {
-    verdict = 'GANGAZO'; color = '#00a651'; emoji = '🔥';
-    desc = 'Precio muy por debajo de mercado. Verifica historial, accidentes y estado antes de comprar.';
-  } else if (delta <= -0.05) {
+  if (score >= 75) {
+    verdict = 'EXCELENTE OPORTUNIDAD'; color = '#00a651'; emoji = '🔥';
+    desc = 'Esta configuración es de las mejores que puedes encontrar para tu objetivo.';
+  } else if (score >= 60) {
     verdict = 'BUENA OPORTUNIDAD'; color = '#7ac143'; emoji = '✅';
-    desc = 'Precio por debajo del valor de mercado. Buena compra si el estado es correcto.';
-  } else if (delta <= 0.05) {
-    verdict = 'PRECIO DE MERCADO'; color = '#f0ad4e'; emoji = '⚖️';
-    desc = 'Precio dentro del rango normal. Puedes intentar negociar a la baja.';
-  } else if (delta <= 0.15) {
-    verdict = 'POR ENCIMA'; color = '#e67e22'; emoji = '⚠️';
-    desc = 'Precio ligeramente por encima del mercado. Busca alternativas o negocia.';
+    desc = 'Configuración sólida. Buena compra si el estado y el historial acompañan.';
+  } else if (score >= 45) {
+    verdict = 'OPORTUNIDAD REGULAR'; color = '#f0ad4e'; emoji = '⚖️';
+    desc = 'Ni destacable ni mala. Solo si el precio final está bien ajustado.';
+  } else if (score >= 30) {
+    verdict = 'POCO RECOMENDABLE'; color = '#e67e22'; emoji = '⚠️';
+    desc = 'Hay opciones mejores por precio similar. Solo si encuentras una unidad excepcional.';
   } else {
-    verdict = 'SOBREPRECIO'; color = '#c0392b'; emoji = '🚫';
-    desc = 'Precio muy por encima del mercado. No recomendado salvo equipamiento excepcional.';
+    verdict = 'MALA OPORTUNIDAD'; color = '#c0392b'; emoji = '🚫';
+    desc = 'Configuración poco eficiente para tu objetivo. Mejor busca otra combinación.';
   }
 
-  // 8. Render
+  // 8. Barra de score
+  const barColor = score >= 60 ? '#00a651' : score >= 45 ? '#f0ad4e' : '#c0392b';
+
+  // 9. Render
   const result = document.getElementById('result');
   result.style.display = 'block';
   result.innerHTML = `
     <div class="card">
       <div class="verdict-box" style="border-color:${color}; background:${color}15;">
-        <div class="verdict-label">${emoji} Veredicto</div>
+        <div class="verdict-label">${emoji} Veredicto de oportunidad</div>
         <div class="verdict" style="color:${color};">${verdict}</div>
         <div class="verdict-desc">${desc}</div>
+        <div class="bar"><div class="bar-fill" style="width:${score}%; background:${barColor};"></div></div>
+        <div style="font-size:0.8rem; color:#8892a6; margin-top:8px;">Puntuación: ${score}/100</div>
       </div>
 
       <div class="stats">
         <div class="stat">
-          <div class="stat-label">Tu precio</div>
-          <div class="stat-value">${formatPrice(precio)}</div>
+          <div class="stat-label">Precio hoy (${2026})</div>
+          <div class="stat-value">${formatPrice(precioHoy)}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">Precio justo</div>
+          <div class="stat-label">Precio ${fecha}</div>
           <div class="stat-value" style="color:${color};">${formatPrice(precioFuturo)}</div>
         </div>
         <div class="stat">
-          <div class="stat-label">Diferencia</div>
-          <div class="stat-value" style="color:${color};">${delta>0?'+':''}${(delta*100).toFixed(1)}%</div>
+          <div class="stat-label">Deprec. est.</div>
+          <div class="stat-value">${((1-depFactor)*100).toFixed(0)}%</div>
         </div>
       </div>
 
@@ -339,8 +427,14 @@ function analizar() {
 
       <div class="notes">
         <strong>Configuración:</strong> BMW ${modelo} (Serie ${serie}) · ${anio} · ${km.toLocaleString('es-ES')} km · ${acabado==='msportpro'?'M Sport Pro':'M Sport'}<br>
-        <strong>Fecha objetivo:</strong> ${fecha==='2026'?'Hoy (Oct 2026)':'Oct '+fecha}<br>
-        <strong>Base:</strong> Precios de mercado alemán ajustados por km, acabado y depreciación futura estimada.
+        <strong>Motor:</strong> ${PERFIL[modelo].motor} · ${PERFIL[modelo].cv} cv · Coste operativo ${PERFIL[modelo].costeOp.toLowerCase()}<br>
+        <strong>Presión de sucesor:</strong> ${PERFIL[modelo].presionSucesor}<br>
+        <strong>Fecha objetivo:</strong> ${fecha==='2026'?'Hoy (Oct 2026)':'Oct '+fecha}
+      </div>
+
+      <div class="notes">
+        <strong>Razones del veredicto:</strong><br>
+        ${razones.map(r => '· ' + r).join('<br>')}
       </div>
 
       ${warning ? `<div class="warning">⚠️ ${warning}</div>` : ''}
