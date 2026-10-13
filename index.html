@@ -155,11 +155,11 @@
 .budget-wrapper { overflow-x: auto; margin-top: 6px; }
 .budget-table {
   width: 100%; border-collapse: collapse;
-  font-size: 0.85rem; min-width: 480px;
+  font-size: 0.82rem; min-width: 620px;
 }
 .budget-table th {
   text-align: left; padding: 10px 8px;
-  color: #8892a6; font-size: 0.72rem; font-weight: 600;
+  color: #8892a6; font-size: 0.7rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 1px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -173,8 +173,11 @@
 .budget-table .cell-ok   { background: rgba(0,166,81,0.18);  color: #4ade80; font-weight: 700; border-radius: 6px; }
 .budget-table .cell-warn { background: rgba(240,173,78,0.18); color: #f0ad4e; font-weight: 700; border-radius: 6px; }
 .budget-table .cell-bad  { background: rgba(192,57,43,0.15); color: #f87171; font-weight: 600; border-radius: 6px; }
+.budget-table .cell-fuera { background: rgba(192,57,43,0.3); color: #ff6b6b; font-weight: 700; border-radius: 6px; }
 .budget-table .modelo-cell { font-weight: 600; color: #e8ecf1; }
-.budget-table .modelo-cell small { display: block; color: #8892a6; font-weight: 400; font-size: 0.72rem; margin-top: 2px; }
+.budget-table .modelo-cell small { display: block; color: #8892a6; font-weight: 400; font-size: 0.7rem; margin-top: 2px; }
+.budget-table .b58-row td { background: rgba(240,173,78,0.05); }
+
 .budget-summary {
   margin-top: 16px; padding-top: 16px;
   border-top: 1px solid rgba(255,255,255,0.08);
@@ -252,10 +255,13 @@
   </div>
 
   <div id="result"></div>
+
+      
+         <!-- ═══════════ GUÍA DE PRESUPUESTO 20-25k€ ═══════════ -->
 <div class="card">
-  <div class="section-title">📊 Guía de presupuesto · 20-25k€</div>
+  <div class="section-title">📊 Guía de presupuesto · 20-25k€ (todo incluido)</div>
   <p style="color:#8892a6; font-size:0.85rem; margin-bottom:14px;">
-    Precios estimados para unidades con ~80.000 km, M Sport, según año de compra.
+    Precios estimados para unidades con ~80.000 km, M Sport. La columna <strong>Total ES</strong> incluye transporte (~1.000€) + ITV + tasas DGT + impuesto de matriculación (9,75% para estos motores).
   </p>
 
   <div class="budget-legend">
@@ -270,108 +276,120 @@
         <tr>
           <th>Modelo</th>
           <th>CV</th>
-          <th>Hoy</th>
-          <th>2027</th>
-          <th>2028</th>
-          <th>2029</th>
+          <th>Precio DE</th>
+          <th>Total ES (con import.)</th>
+          <th>¿Cabe en 2028?</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td class="modelo-cell">320i G20<small>2022 · B48</small></td>
           <td>184</td>
-          <td class="cell-bad">31k</td>
-          <td class="cell-warn">27k</td>
-          <td class="cell-ok">24k</td>
-          <td class="cell-ok">21k</td>
+          <td>24.000 €</td>
+          <td class="cell-bad">27.340 €</td>
+          <td class="cell-bad">❌ Límite</td>
         </tr>
         <tr>
           <td class="modelo-cell">420i G22<small>2022 · B48</small></td>
           <td>184</td>
-          <td class="cell-bad">34k</td>
-          <td class="cell-bad">30k</td>
-          <td class="cell-warn">26k</td>
-          <td class="cell-ok">23k</td>
+          <td>23.000 €</td>
+          <td class="cell-bad">26.243 €</td>
+          <td class="cell-bad">❌ Límite</td>
         </tr>
         <tr>
           <td class="modelo-cell">330i G20<small>2019 · B48</small></td>
           <td>258</td>
-          <td class="cell-bad">29k</td>
-          <td class="cell-warn">26k</td>
-          <td class="cell-ok">24k</td>
-          <td class="cell-ok">22k</td>
+          <td>24.000 €</td>
+          <td class="cell-bad">27.340 €</td>
+          <td class="cell-bad">❌ Límite</td>
         </tr>
         <tr>
           <td class="modelo-cell">320i G20<small>2019 · B48</small></td>
           <td>184</td>
-          <td class="cell-ok">25k</td>
-          <td class="cell-ok">23k</td>
-          <td class="cell-ok">21k</td>
-          <td class="cell-ok">19k</td>
+          <td>21.000 €</td>
+          <td class="cell-ok">24.048 €</td>
+          <td class="cell-ok">✅ Sí</td>
         </tr>
         <tr>
           <td class="modelo-cell">430i G22<small>2018 · B48</small></td>
           <td>252</td>
-          <td class="cell-bad">29k</td>
-          <td class="cell-warn">26k</td>
-          <td class="cell-ok">24k</td>
-          <td class="cell-ok">22k</td>
+          <td>24.000 €</td>
+          <td class="cell-bad">27.340 €</td>
+          <td class="cell-bad">❌ Límite</td>
         </tr>
         <tr>
           <td class="modelo-cell">420i G22<small>2018 · B48</small></td>
           <td>184</td>
-          <td class="cell-warn">26k</td>
-          <td class="cell-ok">24k</td>
-          <td class="cell-ok">22k</td>
-          <td class="cell-ok">20k</td>
+          <td>22.000 €</td>
+          <td class="cell-warn">25.145 €</td>
+          <td class="cell-warn">⚠️ Justo</td>
         </tr>
         <tr>
           <td class="modelo-cell">330i F30<small>2015 · B48</small></td>
           <td>252</td>
-          <td class="cell-ok">24k</td>
-          <td class="cell-ok">23k</td>
-          <td class="cell-ok">22k</td>
-          <td class="cell-ok">20k</td>
+          <td>22.000 €</td>
+          <td class="cell-warn">25.145 €</td>
+          <td class="cell-warn">⚠️ Justo</td>
         </tr>
         <tr>
           <td class="modelo-cell">430i F32<small>2015 · B48</small></td>
           <td>252</td>
-          <td class="cell-warn">26k</td>
-          <td class="cell-ok">25k</td>
-          <td class="cell-ok">23k</td>
-          <td class="cell-ok">22k</td>
+          <td>23.000 €</td>
+          <td class="cell-bad">26.243 €</td>
+          <td class="cell-bad">❌ Límite</td>
         </tr>
-        <tr>
-          <td class="modelo-cell">340i F30<small>2015 · B58 ⭐</small></td>
+        <tr class="b58-row">
+          <td class="modelo-cell">340i F30 <small>2015 · B58 ⭐</small></td>
           <td>326</td>
-          <td class="cell-bad">33k</td>
-          <td class="cell-bad">31k</td>
-          <td class="cell-bad">29k</td>
-          <td class="cell-warn">27k</td>
+          <td>29.000 €</td>
+          <td class="cell-fuera">32.828 €</td>
+          <td class="cell-fuera">🚫 Fuera</td>
         </tr>
-        <tr>
-          <td class="modelo-cell">440i F32<small>2015 · B58 ⭐</small></td>
+        <tr class="b58-row">
+          <td class="modelo-cell">440i F32 <small>2015 · B58 ⭐</small></td>
           <td>326</td>
-          <td class="cell-bad">32k</td>
-          <td class="cell-bad">30k</td>
-          <td class="cell-warn">28k</td>
-          <td class="cell-warn">26k</td>
+          <td>28.000 €</td>
+          <td class="cell-fuera">31.730 €</td>
+          <td class="cell-fuera">🚫 Fuera</td>
+        </tr>
+        <tr class="b58-row">
+          <td class="modelo-cell">M340i G20 <small>2022 · B58 ⭐</small></td>
+          <td>374</td>
+          <td>—</td>
+          <td class="cell-fuera">~38.000 €</td>
+          <td class="cell-fuera">🚫 Fuera</td>
+        </tr>
+        <tr class="b58-row">
+          <td class="modelo-cell">M440i G22 <small>2022 · B58 ⭐</small></td>
+          <td>374</td>
+          <td>—</td>
+          <td class="cell-fuera">~36.000 €</td>
+          <td class="cell-fuera">🚫 Fuera</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="budget-summary">
-    <strong>🔑 Lectura estratégica con 20-25k€:</strong>
+    <strong>🔑 Lectura estratégica con 20-25k€ (todo incluido):</strong>
     <ul>
-      <li><strong>2027:</strong> máximo alcanzable → 320i G20 2019 (184cv) o 430i F32 2015 (252cv). Modernidad o potencia, no ambas.</li>
-      <li><strong>2028:</strong> entra el 320i G20 2022 (el más moderno accesible) y el 330i G20 2019 (258cv, equilibrio).</li>
-      <li><strong>2029:</strong> aparece el 420i G22 2022 (coupé moderno, 184cv) y se acerca el 440i F32 2015 (326cv, B58).</li>
-      <li><strong>Nunca alcanzable en este presupuesto:</strong> 340i/440i G20/G22 2022 (B58 moderno). Necesitas ~30k mínimo.</li>
-      <li><strong>Recomendación:</strong> si valoras seis cilindros → <strong>340i F30 2015</strong> o <strong>440i F32 2015</strong> en 2028-2029. Si valoras modernidad → <strong>330i G20 2019</strong> en 2028.</li>
+      <li><strong>La única opción que cabe limpia:</strong> 320i G20 2019 (184cv) → ~24.048 € total. Modernidad (9 años en 2028) pero motor de acceso.</li>
+      <li><strong>Opciones al límite (25-25.5k€):</strong> 330i F30 2015 (252cv) y 420i G22 2018 (184cv). Requieren negociación a la baja o buscar unidad con muchos km.</li>
+      <li><strong>Los B58 (340i/440i) están fuera:</strong> ni el más barato (440i F32 2015) baja de ~31.700 € con importación. Necesitas ~32k para entrar.</li>
+      <li><strong>Los B58 modernos (M340i/M440i 2022) son inalcanzables:</strong> ~36.000-38.000 € con importación en 2028. Solo con presupuesto de 40k+.</li>
+      <li><strong>Recomendación según prioridad:</strong></li>
     </ul>
+    <ul style="margin-top:10px;">
+      <li>💡 <strong>Modernidad:</strong> 320i G20 2019 (~24.048 €) — lo más nuevo que cabe.</li>
+      <li>💡 <strong>Equilibrio potencia/precio:</strong> 330i F30 2015 (~25.145 €) — 252cv por poco más.</li>
+      <li>💡 <strong>Coupé:</strong> 420i G22 2018 (~25.145 €) — estética Serie 4 sin pagar B58.</li>
+      <li>💡 <strong>Si estiras a 30-32k€:</strong> 440i F32 2015 (~31.730 €) — el B58 más accesible.</li>
+    </ul>
+    <p style="margin-top:12px; font-size:0.8rem; color:#8892a6;">
+      ⚠️ Los precios son estimaciones orientativas. El estado real, kilometraje exacto, equipamiento y negociación pueden mover el total ±15%.
+    </p>
   </div>
-</div>
+</div> 
 
   <footer>
     Precios base: mercado alemán (mobile.de, AutoScout24) · Oct 2026<br>
